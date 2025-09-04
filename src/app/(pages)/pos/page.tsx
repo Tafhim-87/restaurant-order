@@ -48,7 +48,6 @@ const DashboardPage: React.FC = () => {
       console.error("Error calculating total revenue:", error);
     }
   }, [data]);
-  console.log(data);
   
 
   // Calculate active orders (tables with items)
@@ -60,10 +59,6 @@ const DashboardPage: React.FC = () => {
     return `#${1000 + index + 1}`;
   };
 
-  const selectTable = (tableNumber: number) => {
-    console.log('Selected table:', tableNumber);
-    // In a real app, you would navigate to the order page for this table
-  };
 
   return (
     <section className="flex">
@@ -94,7 +89,7 @@ const DashboardPage: React.FC = () => {
                   key={table.tableNumber}
                   tableNumber={table.tableNumber}
                   status={table.status as 'available' | 'occupied' | 'reserved'}
-                  onSelect={() => selectTable(table.tableNumber)}
+                  onSelect={() => {}}
                 />
               ))}
             </div>
