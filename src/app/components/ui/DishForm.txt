@@ -1,0 +1,310 @@
+"use client";
+
+import { useState, ChangeEvent, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { toast, ToastContainer, Slide, Bounce } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+interface FormData {
+  name: string;
+  price: string;
+  category: string;
+  description: string;
+  image: File | null;
+  imagepath: string;
+}
+
+const DishForm: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    price: "",
+    category: "",
+    description: "",
+    image: null,
+    imagepath: "",
+  });
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const router = useRouter();
+
+  const categories = [
+    "Appetizer",
+    "Main Course",
+    "Dessert",
+    "Beverage",
+    "Side Dish",
+  ];
+
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        image: file,
+      }));
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    if (
+      !formData.name ||
+      !formData.price ||
+      !formData.category ||
+      !formData.description
+    ) {
+      toast.error("⚠️ Please fill in all fields.", { theme: "dark" });
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("description", formData.description);
+
+      if (formData.image) {
+        formDataToSend.append("image", formData.image);
+      }
+      if (formData.imagepath) {
+        formDataToSend.append("imagepath", formData.imagepath);
+      }
+
+      const response = await fetch("http://localhost:500/menu/upload", {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("✅ Dish created successfully!", {
+          theme: "dark",
+          onClose: () => router.push("http://localhost:3000/pos/menu"),
+        });
+
+        setFormData({
+          name: "",
+          price: "",
+          category: "",
+          description: "",
+          image: null,
+          imagepath: "",
+        });
+        setPreviewUrl(null);
+
+        const fileInput = document.getElementById(
+          "image-upload"
+        ) as HTMLInputElement;
+        if (fileInput) fileInput.value = "";
+      } else {
+        toast.error(result.message || "❌ Failed to create dish", {
+          theme: "dark",
+        });
+      }
+    } catch (error) {
+      toast.error("❌ An error occurred. Please try again.", {
+        theme: "dark",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto bg-gray-800 p-6 rounded-lg shadow-lg relative">
+      {/* Toast container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={2500}
+        hideProgressBar
+        closeOnClick
+        draggable
+        pauseOnHover
+        transition={Bounce}
+        toastClassName="bg-transparent text-white backdrop-blur-md shadow-none"
+        // bodyClassName="text-sm font-medium"
+      />
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Dish Name */}
+        <div>
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-300 mb-1"
+          >
+            Dish Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md 
+            focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+            required
+          />
+        </div>
+
+        {/* Price */}
+        <div>
+          <label
+            htmlFor="price"
+            className="block text-sm font-medium text-gray-300 mb-1"
+          >
+            Price ($)
+          </label>
+          <input
+            type="number"
+            id="price"
+            name="price"
+            step="0.01"
+            min="0"
+            value={formData.price}
+            onChange={handleInputChange}
+            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md 
+            focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+            required
+          />
+        </div>
+
+        {/* Category */}
+        <div>
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-gray-300 mb-1"
+          >
+            Category
+          </label>
+          <select
+            id="category"
+            name="category"
+            value={formData.category}
+            onChange={handleInputChange}
+            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md 
+            focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+            required
+          >
+            <option value="">Select a category</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Description */}
+        <div>
+          <label
+            htmlFor="description"
+            className="block text-sm font-medium text-gray-300 mb-1"
+          >
+            Description
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            rows={3}
+            value={formData.description}
+            onChange={handleInputChange}
+            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md 
+            focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+            required
+          ></textarea>
+        </div>
+
+        {/* Image Upload & URL */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label
+              htmlFor="image-upload"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
+              Upload Image
+            </label>
+            <input
+              type="file"
+              id="image-upload"
+              name="image"
+              onChange={handleImageChange}
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md 
+              focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-sm"
+              accept="image/*"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="imagepath"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
+              Or Enter Image URL
+            </label>
+            <input
+              type="url"
+              id="imagepath"
+              name="imagepath"
+              value={formData.imagepath}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md 
+              focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+        </div>
+
+        {/* Preview */}
+        {previewUrl && (
+          <div className="mt-4">
+            <p className="text-sm font-medium text-gray-300 mb-2">Image Preview:</p>
+            <div className="w-48 h-48 border border-gray-600 rounded-md overflow-hidden">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Submit */}
+        <div className="flex justify-end pt-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-md 
+            text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 
+            disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? "Creating..." : "Create Dish"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default DishForm;
