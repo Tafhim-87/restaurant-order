@@ -16,7 +16,14 @@ type Payment = {
 };
 
 const PaymentsPage: React.FC = () => {
-  const { data, remove } = useApi<Payment[]>("/payment");
+  // Example: get token from localStorage or context
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
+
+  const { data, remove } = useApi<Payment[]>(
+    "/payment",
+    token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+  );
+
   const [payments, setPayments] = useState<Payment[]>([]);
   const [searchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
@@ -30,12 +37,8 @@ const PaymentsPage: React.FC = () => {
     }
   }, [data]);
 
-  // Format order ID to auto-increment style (e.g., #1001, #1002)
-  const formatOrderId = (id: string, index: number) => {
-    return `#${1000 + index + 1}`;
-  };
+  const formatOrderId = (id: string, index: number) => `#${1000 + index + 1}`;
 
-  // Format date to readable format
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
@@ -47,12 +50,11 @@ const PaymentsPage: React.FC = () => {
     }).format(date);
   };
 
-  // Filter payments based on orderId search query
   const filteredPayments = payments
-    .filter((payment) => {
-      return !searchQuery || 
-        (payment.orderId && payment.orderId.toLowerCase().includes(searchQuery.toLowerCase()));
-    })
+    .filter((payment) =>
+      !searchQuery ||
+      (payment.orderId && payment.orderId.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
     .sort((a, b) => {
       if (sortBy === "date") {
         const dateA = new Date(a.createdAt).getTime();
@@ -63,18 +65,10 @@ const PaymentsPage: React.FC = () => {
       }
     });
 
-  // Calculate total amount of filtered payments
-  const totalAmount = filteredPayments.reduce(
-    (sum, payment) => sum + payment.amount,
-    0
-  );
+  const totalAmount = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
 
   const deleteAllPayments = async () => {
-    if (
-      confirm(
-        "Are you sure you want to delete all payments? This action cannot be undone."
-      )
-    ) {
+    if (confirm("Are you sure you want to delete all payments? This action cannot be undone.")) {
       const success = await remove("/payment");
       if (success) {
         setPayments([]);
@@ -83,14 +77,12 @@ const PaymentsPage: React.FC = () => {
     }
   };
 
-  // Pagination logic
   const totalItems = filteredPayments.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentItems = filteredPayments.slice(startIndex, endIndex);
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, sortBy, sortOrder]);

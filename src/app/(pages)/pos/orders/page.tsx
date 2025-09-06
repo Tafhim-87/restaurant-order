@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Card from "../../../components/ui/Card";
 import OrderItem from "../../../components/pos/OrderItem";
 import OrderSummary from "../../../components/pos/OrderSummary";
@@ -39,17 +39,26 @@ const OrdersPage: React.FC = () => {
     dispatch(initializeTables([1, 2, 3, 4, 5, 6, 7, 8]));
   }, [dispatch]);
 
-  // Get current table's order
-  const currentTableData = tables.find((t) => t.tableNumber === currentTable);
-  const currentOrder = currentTableData?.items || [];
+  // Get current table's order - memoized to prevent unnecessary re-renders
+  const currentTableData = useMemo(() => 
+    tables.find((t) => t.tableNumber === currentTable),
+    [tables, currentTable]
+  );
+
+  const currentOrder = useMemo(() => 
+    currentTableData?.items || [],
+    [currentTableData?.items] // Only depends on items array
+  );
+
   const currentTableStatus = currentTableData?.status || 'available';
 
-  const subtotal = currentOrder.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+  const subtotal = useMemo(() => 
+    currentOrder.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [currentOrder]
   );
-  const tax = subtotal * 0.08;
-  const total = subtotal + tax;
+
+  const tax = useMemo(() => subtotal * 0.08, [subtotal]);
+  const total = useMemo(() => subtotal + tax, [subtotal, tax]);
 
   // Update table status when order changes
   useEffect(() => {
@@ -86,7 +95,6 @@ const OrdersPage: React.FC = () => {
       dispatch(removeFromOrder({ tableNumber: currentTable, itemId: id }));
     }
   };
-
   const removeItem = (id: string) => {
     dispatch(removeFromOrder({ tableNumber: currentTable, itemId: id }));
   };

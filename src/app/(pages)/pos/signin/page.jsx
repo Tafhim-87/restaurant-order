@@ -4,8 +4,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useApi from '@/app/hooks/useApi';
+import { useAuth } from '@/app/context/AuthContext';
 
 export default function SignInForm() {
+  const { token } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +42,8 @@ export default function SignInForm() {
         setIsLoading(false);
       }
     };
+
+    
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
@@ -120,62 +124,3 @@ export default function SignInForm() {
     </div>
   );
 }
-
-
-// 'use client';
-
-// import { useState } from 'react';
-// import { useAuth } from '@/app/context/AuthContext';
-// import useApi from '@/app/hooks/useApi';
-// import { useRouter } from 'next/navigation';
-
-// /**
-//  * @typedef {Object} LoginResponse
-//  * @property {string} token
-//  * @property {{id: string, email: string, role: string, name?: string}} user
-//  */
-
-// const SignInPage = () => {
-//   const [email, setEmail] = useState('');
-//   const [password, setPassword] = useState('');
-//   const { login } = useAuth();
-//   const { post, loading, error } = useApi('/pos/signin');
-//   const router = useRouter();
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     const response = await post('/pos/signin', { email, password });
-//     if (response) {
-//       login(response.token, response.user);
-//       router.push('/pos');
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center">
-//       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-//         <h1>Sign In</h1>
-//         <input
-//           type="email"
-//           value={email}
-//           onChange={(e) => setEmail(e.target.value)}
-//           placeholder="Email"
-//           className="border p-2"
-//         />
-//         <input
-//           type="password"
-//           value={password}
-//           onChange={(e) => setPassword(e.target.value)}
-//           placeholder="Password"
-//           className="border p-2"
-//         />
-//         <button type="submit" disabled={loading} className="bg-blue-500 text-white p-2">
-//           {loading ? 'Logging in...' : 'Log In'}
-//         </button>
-//         {error && <p className="text-red-500">{error}</p>}
-//       </form>
-//     </div>
-//   );
-// };
-
-// export default SignInPage;

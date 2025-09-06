@@ -1,93 +1,44 @@
-'use client';
+import axios from "axios";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+const AuthContext = createContext<{ token: string | null }>({ token: null });
 
-interface User {
-  id: string;
-  email: string;
-  role: string;
-  name?: string;
-}
+const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  // State to hold the authentication token
+  const [token, setToken_] = useState(localStorage.getItem("token"));
 
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  login: (token: string, userData: User) => void;
-  logout: () => void;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Function to set the authentication token
+  const setToken = (newToken: string) => {
+    setToken_(newToken);
+  };
 
   useEffect(() => {
-    // Check if user is logged in on component mount
-    const initializeAuth = () => {
-      if (typeof window !== 'undefined') {
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-        
-        if (storedToken && storedUser) {
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
-        }
-      }
-      setIsLoading(false);
-    };
-
-    initializeAuth();
-  }, []);
-
-  const login = (newToken: string, userData: User) => {
-    setToken(newToken);
-    setUser(userData);
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('token', newToken);
-      localStorage.setItem('user', JSON.stringify(userData));
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = "Bearer " + token;
+      localStorage.setItem('token',token);
+    } else {
+      delete axios.defaults.headers.common["Authorization"];
+      localStorage.removeItem('token')
     }
-  };
+  }, [token]);
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('userRole');
-    }
-  };
+  // Memoized value of the authentication context
+  const contextValue = useMemo(
+    () => ({
+      token,
+      setToken,
+    }),
+    [token]
+  );
 
-  const value: AuthContextType = {
-    user,
-    token,
-    login,
-    logout,
-    isAuthenticated: !!token,
-    isLoading,
-  };
-
+  // Provide the authentication context to the children components
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };
+
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
+export default AuthProvider;
