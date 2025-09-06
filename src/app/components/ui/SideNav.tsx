@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, HomeIcon, NotebookText, CookingPot, CircleDollarSign } from "lucide-react";
+import { Menu, X, HomeIcon, NotebookText, CookingPot, CircleDollarSign, PrinterCheck } from "lucide-react";
 
 
 const navItems = [
@@ -10,7 +10,7 @@ const navItems = [
   { name: "Orders", path: "/pos/orders", icon: <NotebookText size={20} /> },
   { name: "Menu", path: "/pos/menu", icon: <CookingPot size={20} /> },
   { name: "Payments", path: "/pos/payments", icon: <CircleDollarSign size={20} /> },
-  // { name: "Settings", path: "/pos/settings", icon: "⚙️" },
+  { name: "Print_Bill", path: "/pos/print-bill", icon: <PrinterCheck size={20} /> },
 ];
 
 export default function SidebarLayout({ children }: { children: React.ReactNode }) {
