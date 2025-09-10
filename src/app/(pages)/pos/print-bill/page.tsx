@@ -73,7 +73,7 @@ const PrintBillPage: React.FC = () => {
 
   if (occupiedTables.length === 0) {
     return (
-      <section className="flex justify-center items-center min-h-screen bg-gray-100">
+      <section className="flex justify-center items-center min-h-screen bg-transparent">
         <Card className="p-8 text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Print Bill</h1>
           <p className="text-gray-600">No occupied tables with orders found.</p>
@@ -83,9 +83,9 @@ const PrintBillPage: React.FC = () => {
   }
 
   return (
-    <section className="flex flex-col items-center min-h-screen bg-gray-100 p-6">
+    <section className="flex flex-col items-center min-h-screen bg-transparent p-6">
       <div className="w-full max-w-4xl">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+        <h1 className="text-3xl font-bold mb-6 text-center">
           Print Bill
         </h1>
 
@@ -102,7 +102,6 @@ const PrintBillPage: React.FC = () => {
                   selectedTable === table.tableNumber ? "primary" : "secondary"
                 }
                 onClick={() => setSelectedTable(table.tableNumber)}
-                className="!text-black"
               >
                 Table {table.tableNumber}
               </Button>

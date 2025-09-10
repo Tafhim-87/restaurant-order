@@ -7,7 +7,8 @@ import Button from "@/app/components/ui/Button";
 import { useDispatch } from "react-redux";
 import { addToOrder } from "@/app/redux/orderSlice";
 import DishForm from "@/app/components/ui/DishForm";
-import useApi from "@/app/hooks/useApi";
+// import useApi from "@/app/hooks/useApi";
+import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -26,25 +27,33 @@ const MenuPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [menuData, setMenuData] = useState<MenuItem[] | null>(null);
   const [tableNumber, setTableNumber] = useState(1);
-  const { data, remove, refetch } = useApi<MenuItem[]>("/menu");
+  // const { data, remove, refetch } = useApi<MenuItem[]>("/menu");
 
   const categories = Array.from(
     new Set(menuData?.map((item) => item.category))
   );
 
   useEffect(() => {
-    if (data) {
-      setMenuData(data);
-    }
-  }, [data]);
+    const fetchMenu = async () => {
+      try {
+        const response = await axios.get<MenuItem[]>(`${process.env.NEXT_PUBLIC_API}/menu`);
+        setMenuData(response.data);
+      } catch (error) {
+        console.error("Error fetching menu data:", error);
+      }
+    };
+
+    fetchMenu();
+  }, []);
 
   const deleteItem = async (id: string) => {
     try {
-      await remove(`/menu/${id}`);
-      setMenuData((prev) => prev?.filter((item) => item._id !== id) || null);
+      await axios.delete(`${process.env.NEXT_PUBLIC_API}/menu/${id}`);
+      setMenuData((prevData) => prevData?.filter((item) => item._id !== id) || null);
       toast.success("Item deleted successfully");
     } catch (error) {
       console.error("Error deleting item:", error);
+      toast.error("Failed to delete item");
     }
   };
 
@@ -104,7 +113,7 @@ const MenuPage: React.FC = () => {
           onSelectCategory={setSelectedCategory}
         />
 
-        <div className="grid grid-cols-1 text-black sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 text-black sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
           {(filteredItems ?? []).map((item) => (
             <MenuItemCard
               key={item._id}
@@ -122,11 +131,12 @@ const MenuPage: React.FC = () => {
         <DishForm
           onSuccess={() => {
             setCreateDish(false);
-            refetch();
+            // Optionally, re-fetch menu data here if needed
+
           }}
           onCancel={() => {
             setCreateDish(false);
-            refetch();
+            // Optionally, re-fetch menu data here if needed
           }}
         />
       )}

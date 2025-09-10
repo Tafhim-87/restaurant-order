@@ -41,7 +41,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition 
                 ${
                   pathname === item.path
-                    ? "bg-blue-600 text-white shadow"
+                    ? "bg-[#006769] text-white shadow"
                     : "text-gray-300 hover:bg-gray-800 hover:text-white"
                 }`}
               onClick={() => setOpen(false)}
@@ -51,11 +51,18 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
             </Link>
           ))}
         </nav>
+
+        {/* add copyright */}
+        <div className="absolute bottom-0 w-full p-4 border-t border-gray-700 text-center text-xs text-gray-500">
+          &copy; {new Date().getFullYear()} Tafhim Hasan
+        </div>
       </aside>
 
       {/* Mobile toggle button */}
       <button
-        className="fixed top-4 left-4 z-50 p-2 bg-gray-900 text-gray-200 shadow rounded-md md:hidden"
+        className={`fixed top-4 left-4 z-50 p-2 bg-gray-900 text-gray-200 shadow rounded-md md:hidden ${open ? "hidden" : ""
+          }`}
+        aria-label="Open sidebar" 
         onClick={() => setOpen(true)}
       >
         <Menu size={24} />
