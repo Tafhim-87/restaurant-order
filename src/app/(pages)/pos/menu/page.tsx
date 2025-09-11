@@ -11,6 +11,7 @@ import DishForm from "@/app/components/ui/DishForm";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Router } from "next/router";
 
 type MenuItem = {
   _id: string;
@@ -123,7 +124,7 @@ const MenuPage: React.FC = () => {
             />
           ))}
         </div>
-        <ToastContainer position="top-right" autoClose={2000} />
+      <ToastContainer position="top-right" autoClose={1500} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="dark" />
       </div>
 
       {/* Modal (DishForm) */}
@@ -131,12 +132,10 @@ const MenuPage: React.FC = () => {
         <DishForm
           onSuccess={() => {
             setCreateDish(false);
-            // Optionally, re-fetch menu data here if needed
-
+            window.location.reload(); 
           }}
           onCancel={() => {
             setCreateDish(false);
-            // Optionally, re-fetch menu data here if needed
           }}
         />
       )}

@@ -1,52 +1,58 @@
-// components/SignInForm.tsx
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import useApi from '@/app/hooks/useApi';
-import { useAuth } from '@/app/context/AuthContext';
+import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function SignInForm() {
-  const { token } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const router = useRouter();
 
-  // Use your custom API hook
-    const { data, error, loading, post } = useApi('/pos/signin')
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setSuccess(false);
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setIsLoading(true);
-  
-      try {
-        const response = await post('/pos/signin', { email, password });
-
-        if (response && response.success) {
-          // Store token (you might want to use a more secure method)
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('userRole', response.role);
-
-          // Redirect to dashboard or home page
-          router.push('/pos');
-        } else if (response && response.message) {
-          alert(response.message || 'Sign-in failed');
-        } else if (error) {
-          alert(error.message || 'Sign-in failed');
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API}/pos/signin`,
+        { email, password },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         }
-      } catch (err) {
-        console.error('Sign-in error:', err);
-        alert('An error occurred during sign-in');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      );
 
-    
+      if (response.data?.success) {
+        // Store token + role
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('userRole', response.data.role);
+
+        setSuccess(true);
+
+        // Redirect after short delay
+        setTimeout(() => {
+          router.push('/pos');
+        }, 1000);
+      } else {
+        alert(response.data?.message || 'Sign-in failed');
+      }
+    } catch (err) {
+      console.error('Sign-in error:', err);
+      toast.error('An error occurred during sign-in. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#030712] text-white flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="bg-gray-900 rounded-lg shadow-2xl p-8 border border-gray-800">
           {/* Header */}
@@ -56,7 +62,7 @@ export default function SignInForm() {
           </div>
 
           {/* Success Message */}
-          {data?.success && (
+          {success && (
             <div className="bg-green-900/50 border border-green-700 text-green-200 px-4 py-3 rounded-lg mb-6">
               Sign-in successful! Redirecting...
             </div>
@@ -99,10 +105,10 @@ export default function SignInForm() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading || loading}
+              disabled={isLoading}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:scale-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
             >
-              {isLoading || loading ? (
+              {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                   Signing in...
@@ -121,6 +127,7 @@ export default function SignInForm() {
           </div>
         </div>
       </div>
+      <ToastContainer position="top-right" autoClose={1500} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="dark" />
     </div>
   );
 }
